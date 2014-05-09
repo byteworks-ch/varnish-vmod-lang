@@ -1,0 +1,24 @@
+varnishtest "Test lang vmod"
+
+server s1 {
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import lang from "${vmod_topbuild}/src/.libs/libvmod_lang.so";
+
+	sub vcl_deliver {
+		set resp.http.x-lang = lang.detect(req.http.Accept-Language, "de,en,fr,it", "de");
+	}
+} -start
+
+client c1 {
+	# This pattern has been bluntly copied from https://github.com/cosimo/varnish-accept-language/blob/master/t/crash-me.t
+	txreq -url "/" -hdr "Accept-Language: fr,en;q=0.9,ja;q=0.8,de;q=0.7,es;q=0.6,it;q=0.5,pt;q=0.4,pt-PT;q=0.3,nl;q=0.2,sv;q=0.1,nb;q=0.1,da;q=0.1,fi;q=0.1,ru;q=0.1,pl;q=0.1,zh-CN;q=0.1,zh-TW;q=0.1,ko;q=0.1,fr,en;q=0.9,ja;q=0.8,de;q=0.7,es;q=0.6,it;q=0.5,pt;q=0.4,pt-PT;q=0.3,nl;q=0.2,sv;q=0.1,nb;q=0.1,da;q=0.1,fi;q=0.1,ru;q=0.1,pl;q=0.1,zh-CN;q=0.1,zh-TW;q=0.1,ko;q=0.1"
+	rxresp
+	expect resp.http.x-lang == "fr"
+}
+
+client c1 -run
+

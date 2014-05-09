@@ -1,0 +1,23 @@
+varnishtest "Test lang vmod"
+
+server s1 {
+       rxreq
+       txresp
+} -start
+
+varnish v1 -vcl+backend {
+	import lang from "${vmod_topbuild}/src/.libs/libvmod_lang.so";
+
+	sub vcl_deliver {
+		set resp.http.x-lang = lang.detect(req.http.Accept-Language, "de,en,fr,it", "de");
+	}
+} -start
+
+client c1 {
+	txreq -url "/" -hdr "Accept-Language: en-US,a1,a2,a3"
+	rxresp
+	expect resp.http.x-lang == "en"
+}
+
+client c1 -run
+

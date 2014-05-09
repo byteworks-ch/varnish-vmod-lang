@@ -1,0 +1,4 @@
+Module lang
+Init init_function
+Function STRING detect(STRING, STRING, STRING)
+Function STRING version()
