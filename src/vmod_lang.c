@@ -20,7 +20,7 @@
 #include "config.h"
 
 #include "vrt.h"
-#include "bin/varnishd/cache.h"
+#include "cache/cache.h"
 
 #include "vcc_if.h"
 
@@ -83,8 +83,8 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
     return (0);
 }
 
-const char
-*vmod_detect(struct sess *sp, const char *header, const char *languages, const char *language)
+VCL_STRING
+vmod_detect(const struct vrt_ctx *ctx, VCL_STRING header, VCL_STRING languages, VCL_STRING language)
 {
 	char       *token;
 	char       *token_ptr;
@@ -95,10 +95,13 @@ const char
 	float       prio;
     int         i;
 
-	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
-	CHECK_OBJ_NOTNULL(sp->ws, WS_MAGIC);
+    char *selected_language;
+    struct ws *ws;
+
 	assert(languages);
 	assert(language);
+
+	ws = ctx->ws;
 
 	// Empty or default header, return immediately
     if (!header || strlen(header) == 0 || strcmp(header, language) == 0) {
@@ -116,7 +119,7 @@ const char
 
 	// Tokenize accept-language header
 	while ((token = strtok_r(data_ptr, ",", &token_ptr))) {
-		// strtok() wants NULL on subsequent calls 
+		// strtok() wants NULL on subsequent calls
 		data_ptr = NULL;
 
 		// Ignore spaces
@@ -151,16 +154,22 @@ const char
 
 	for (i = 0; i < lang_list.count; i++) {
 		if (strstr(languages, lang_list.data[i].lang) != NULL) {
-			return WS_Dup(sp->ws, lang_list.data[i].lang);
+
+			int len = strlen(lang_list.data[i].lang);
+			selected_language = WS_Alloc(ws, len);
+			memcpy(selected_language, lang_list.data[i].lang, len);
+			selected_language[len] = '\0';
+
+			return selected_language;
 		}
 	}
 
-	return WS_Dup(sp->ws, language);
+	return language;
 }
 
 
-const char *
-vmod_version(struct sess *sp)
+VCL_STRING
+vmod_version(const struct vrt_ctx *ctx)
 {
 	return VERSION;
 }

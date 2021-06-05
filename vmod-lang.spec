@@ -6,16 +6,18 @@ License: BSD
 Group: System Environment/Daemons
 Source0: libvmod-lang.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: varnish > 3.0
-BuildRequires: make, python-docutils
-
+Requires: varnish >= 4.0.2
+BuildRequires: make
+BuildRequires: python-docutils
+BuildRequires: varnish >= 4.0.2
+BuildRequires: varnish-libs-devel >= 4.0.2
 
 %description
 A varnish vmod for language detection based on the accept language header
 
 
 %prep
-%setup -n libvmod-lang
+%setup -n libvmod-lang-trunk
 
 
 %build
@@ -31,13 +33,13 @@ make install DESTDIR=%{buildroot}
 
 
 %clean
-rm -rf %{buildroot}
+[ %{buildroot} != "/" ] && %{__rm} -rf %{buildroot}
 
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/varnish/vmods/
-%doc /usr/share/doc/%{name}/*
+%{_libdir}/varnis*/vmods/
+%doc /usr/share/doc/lib%{name}/*
 %{_mandir}/man?/*
 
 

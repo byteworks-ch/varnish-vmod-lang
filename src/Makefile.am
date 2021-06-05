@@ -1,23 +1,29 @@
-AM_CPPFLAGS = -I$(VARNISHSRC)/include -I$(VARNISHSRC)
+AM_CPPFLAGS = @VMOD_INCLUDES@ -Wall -Werror
 
-vmoddir = $(VMODDIR)
+vmoddir = @VMOD_DIR@
 vmod_LTLIBRARIES = libvmod_lang.la
 
 libvmod_lang_la_LDFLAGS = -module -export-dynamic -avoid-version -shared
 
 libvmod_lang_la_SOURCES = \
-	vcc_if.c \
-	vcc_if.h \
 	vmod_lang.c
 
-vcc_if.c vcc_if.h: $(VARNISHSRC)/lib/libvmod_std/vmod.py $(top_srcdir)/src/vmod_lang.vcc
-	@PYTHON@ $(VARNISHSRC)/lib/libvmod_std/vmod.py $(top_srcdir)/src/vmod_lang.vcc
+nodist_libvmod_lang_la_SOURCES = \
+	vcc_if.c \
+	vcc_if.h
 
-VMOD_TESTS = tests/*.vtc
+vmod_lang.lo: vcc_if.c vcc_if.h
+
+vcc_if.c: vcc_if.h
+
+vcc_if.h: @VMODTOOL@ $(top_srcdir)/src/vmod_lang.vcc
+	@VMODTOOL@ $(top_srcdir)/src/vmod_lang.vcc
+
+VMOD_TESTS = $(top_srcdir)/src/tests/*.vtc
 .PHONY: $(VMOD_TESTS)
 
-tests/*.vtc:
-	$(VARNISHSRC)/bin/varnishtest/varnishtest -Dvarnishd=$(VARNISHSRC)/bin/varnishd/varnishd -Dvmod_topbuild=$(abs_top_builddir) $@
+$(top_srcdir)/src/tests/*.vtc: libvmod_lang.la
+	@VARNISHTEST@ -Dvarnishd=@VARNISHD@ -Dvmod_topbuild=$(abs_top_builddir) $@
 
 check: $(VMOD_TESTS)
 
@@ -25,5 +31,8 @@ EXTRA_DIST = \
 	vmod_lang.vcc \
 	$(VMOD_TESTS)
 
-CLEANFILES = $(builddir)/vcc_if.c $(builddir)/vcc_if.h
-
+CLEANFILES = \
+	$(builddir)/vcc_if.c \
+	$(builddir)/vcc_if.h \
+	$(builddir)/vmod_lang.rst \
+	$(builddir)/vmod_lang.man.rst

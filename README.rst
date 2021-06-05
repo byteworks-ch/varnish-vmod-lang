@@ -7,8 +7,8 @@ Varnish Lang Module
 -------------------
 
 :Author: Michael Bischof
-:Date: 2014-05-09
-:Version: 1.0
+:Date: 2015-09-15
+:Version: 2.0
 :Manual section: 3
 
 SYNOPSIS
@@ -50,28 +50,33 @@ INSTALLATION
 
 The source tree is based on autotools to configure the building, and
 does also have the necessary bits in place to do functional unit tests
-using the varnishtest tool.
+using the ``varnishtest`` tool.
+
+Building requires the Varnish header files and uses pkg-config to find
+the necessary paths.
 
 Usage::
 
- ./configure VARNISHSRC=DIR [VMODDIR=DIR]
+ ./autogen.sh
+ ./configure
 
-`VARNISHSRC` is the directory of the Varnish source tree for which to
-compile your vmod. Both the `VARNISHSRC` and `VARNISHSRC/include`
-will be added to the include search paths for your module.
+If you have installed Varnish to a non-standard directory, call
+``autogen.sh`` and ``configure`` with ``PKG_CONFIG_PATH`` pointing to
+the appropriate path. For example, when varnishd configure was called
+with ``--prefix=$PREFIX``, use
 
-Optionally you can also set the vmod install directory by adding
-`VMODDIR=DIR` (defaults to the pkg-config discovered directory from your
-Varnish installation).
+PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+export PKG_CONFIG_PATH
 
 Make targets:
 
-* make - builds the vmod
-* make install - installs your vmod in `VMODDIR`
+* make - builds the vmod.
+* make install - installs your vmod.
 * make check - runs the unit tests in ``src/tests/*.vtc``
+* make distcheck - run check and prepare a tarball of the vmod.
 
 In your VCL you could then use this vmod along the following lines::
-	
+
 	import lang;
 
 	sub vcl_deliver {
@@ -79,12 +84,15 @@ In your VCL you could then use this vmod along the following lines::
 		set resp.http.x-lang = lang.detect(req.http.Accept-Lanugage, "de,en,fr,it", "de");
 	}
 
-HISTORY
-=======
 
-This manual page was released as part of the libvmod-lang package.
-For further modules and inspiration check the vmod directory:
-https://www.varnish-cache.org/vmods
+COMMON PROBLEMS
+===============
+
+* configure: error: Need varnish.m4 -- see README.rst
+
+  Check if ``PKG_CONFIG_PATH`` has been set correctly before calling
+  ``autogen.sh`` and ``configure``
+
 
 COPYRIGHT
 =========
