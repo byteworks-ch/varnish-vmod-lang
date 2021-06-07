@@ -1,47 +1,39 @@
-Summary: Lang VMOD for Varnish
+Summary: @PACKAGE_SUMMARY@
 Name: vmod-lang
-Version: 1.0
+Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
-License: BSD
+License: @PACKAGE_LICENSE@
 Group: System Environment/Daemons
 Source0: libvmod-lang.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish > 3.0
-BuildRequires: make, python-docutils
-
+BuildRequires: make
+BuildRequires: python-docutils
 
 %description
-A varnish vmod for language detection based on the accept language header
-
+@PACKAGE_DESCRIPTION@
 
 %prep
 %setup -n libvmod-lang
 
-
 %build
 # this assumes that VARNISHSRC is defined on the rpmbuild command line, like this:
 # rpmbuild -bb --define 'VARNISHSRC /home/user/rpmbuild/BUILD/varnish-3.0.3' redhat/*spec
-./configure VARNISHSRC=%{VARNISHSRC} VMODDIR="$(PKG_CONFIG_PATH=%{VARNISHSRC} pkg-config --variable=vmoddir varnishapi)" --prefix=/usr/ --docdir='${datarootdir}/doc/%{name}'
+./configure VARNISHSRC=%{VARNISHSRC} VMOD_DIR="$(PKG_CONFIG_PATH=%{VARNISHSRC} pkg-config --variable=vmoddir varnishapi)" --prefix=/usr/ --docdir='${datarootdir}/doc/%{name}'
 make
 make check
-
 
 %install
 make install DESTDIR=%{buildroot}
 
-
 %clean
 rm -rf %{buildroot}
 
-
 %files
 %defattr(-,root,root,-)
-%{_libdir}/varnish/vmods/
+%{_libdir}/varnis*/vmods/
 %doc /usr/share/doc/%{name}/*
 %{_mandir}/man?/*
 
-
 %changelog
-* Fri May 09 2014 Michael Bischof <mb@byteworks.ch> - 1.0-1
 - Initial version.
-

@@ -1,72 +1,108 @@
+## Run autoconf on this file to produce configure.in
+#=============================================================================
+#
+# libvmod-lang/configure.ac: autoconf configuration file
+#
+#=============================================================================
+
+#-----------------------------
+#           Init:
+#-----------------------------
 AC_PREREQ(2.59)
-AC_COPYRIGHT([Copyright (c) 2014 Byteworks GmbH])
-AC_INIT([libvmod-lang], [trunk])
+AC_COPYRIGHT([Copyright 2014-2021 Byteworks GmbH])
+AC_INIT([libvmod-lang], [1.0.0])
+AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/vmod_lang.vcc)
-AC_CONFIG_HEADERS(config.h)
-
 AC_CANONICAL_SYSTEM
 AC_LANG(C)
-
+AC_GNU_SOURCE
 AM_INIT_AUTOMAKE([foreign])
 
-AC_GNU_SOURCE
+#-----------------------------
+#         Programs:
+#-----------------------------
 AC_PROG_CC
-AC_PROG_CC_STDC
-if test "x$ac_cv_prog_cc_c99" = xno; then
+AC_PROG_CC_C99
+AS_IF([test "x$ac_cv_prog_cc_c99" = "xno"],[
 	AC_MSG_ERROR([Could not find a C99 compatible compiler])
-fi
+])
 AC_PROG_CPP
-
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 # Check for rst utilities
-AC_CHECK_PROGS(RST2MAN, [rst2man rst2man.py], "no")
-if test "x$RST2MAN" = "xno"; then
-	AC_MSG_WARN([rst2man not found - not building man pages])
-fi
-AM_CONDITIONAL(HAVE_RST2MAN, [test "x$RST2MAN" != "xno"])
+AC_ARG_VAR([MD2MAN],
+    [path to the m2dman tool used to build man pages (optional)])
+AC_PATH_PROG(MD2MAN, [md2man-roff],[no])
+AS_IF([test "x$MD2MAN" == "xno"],[
+	AC_MSG_WARN([md2man not found - not building man pages])
+])
+AM_CONDITIONAL([HAVE_MD2MAN], [test "x$MD2MAN" != "xno"])
 
 # Check for pkg-config
 PKG_PROG_PKG_CONFIG
 
-# Checks for header files.
+# Check for python
+AC_CHECK_PROGS([PYTHON],
+	[python3 python3.1 python3.2 python2.7 python2.6 python2.5 python2 python],
+	[AC_MSG_ERROR([Python is needed to build this vmod. Please install python.])
+	])
+
+#-----------------------------
+#           Headers:
+#-----------------------------
+AC_CHECK_HEADERS([stdlib.h string.h])
 AC_HEADER_STDC
 AC_CHECK_HEADERS([sys/stdlib.h])
 
-# Check for python
-AC_CHECK_PROGS(PYTHON, [python3 python3.1 python3.2 python2.7 python2.6 python2.5 python2 python], [AC_MSG_ERROR([Python is needed to build this vmod, please install python.])])
+#-----------------------------
+#           Types:
+#-----------------------------
+AC_C_INLINE
+AC_TYPE_SIZE_T
 
-# Varnish source tree
-AC_ARG_VAR([VARNISHSRC], [path to Varnish source tree (mandatory)])
-if test "x$VARNISHSRC" = x; then
-	AC_MSG_ERROR([No Varnish source tree specified])
-fi
-VARNISHSRC=`cd $VARNISHSRC && pwd`
-AC_CHECK_FILE([$VARNISHSRC/include/varnishapi.h],
-	[],
-	[AC_MSG_FAILURE(["$VARNISHSRC" is not a Varnish source directory])]
-)
+#-----------------------------
+#       Function Checks:
+#-----------------------------
+AC_CHECK_FUNCS([strchr])
 
-# Check that varnishtest is built in the varnish source directory
-AC_CHECK_FILE([$VARNISHSRC/bin/varnishtest/varnishtest],
-	[],
-	[AC_MSG_FAILURE([Can't find "$VARNISHSRC/bin/varnishtest/varnishtest". Please build your varnish source directory])]
-)
+#-----------------------------
+#           Varnish:
+#-----------------------------
+AX_CHECK_VARNISH_VMOD_DEV([
+    AC_MSG_NOTICE([Varnish build environment okay.])
+],[
+   AC_MSG_ERROR([Unable to find required Varnish build environment.])
+])
 
-# vmod installation dir
-AC_ARG_VAR([VMODDIR], [vmod installation directory @<:@LIBDIR/varnish/vmods@:>@])
-if test "x$VMODDIR" = x; then
-	VMODDIR=`pkg-config --variable=vmoddir varnishapi`
-	if test "x$VMODDIR" = x; then
-		AC_MSG_FAILURE([Can't determine vmod installation directory through pkgconfig])
-	fi
-fi
+AC_DEFINE_UNQUOTED(
+    [VARNISH_API_MAJOR],
+    [$VARNISH_API_MAJOR],
+    [Varnish API major version])
 
+AM_CONDITIONAL([VARNISHSRC_3_X],[test "x$VARNISH_API_MAJOR" = "x3"])
+AM_CONDITIONAL([VARNISHSRC_4_X],[test "x$VARNISH_API_MAJOR" = "x4"])
+AM_CONDITIONAL([VARNISHSRC_5_X],[test "x$VARNISH_API_MAJOR" = "x5"])
+
+
+#-----------------------------
+#          Output:
+#-----------------------------
+AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 ])
 AC_OUTPUT
+
+## EOF
+

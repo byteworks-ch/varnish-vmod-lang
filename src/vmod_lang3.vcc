@@ -1,0 +1,3 @@
+$Module lang 
+$Function STRING detect(STRING, STRING, STRING)
+$Function STRING version()

@@ -1,4 +1,23 @@
-Module lang
-Init init_function
-Function STRING detect(STRING, STRING, STRING)
-Function STRING version()
+$Module lang Varnish Lang Module
+
+DESCRIPTION
+===========
+
+`lang` a simple VMOD for [Varnish Cache](https://www.varnish-cache.org/)
+which provides language detection based on the accept-language header.
+
+$Function STRING detect(STRING, STRING, STRING)
+
+Description
+    It accepts the accept language header, a list of languages (separated by comma) and
+    the default language. The given languages are evaluated and the best fit is choosen.
+    If there is no match, the default language given is returned.
+Example
+    set req.x-lang = lang.detect(req.http.Accept-Language, "de,en,fr,it", "de");
+
+$Function STRING version()
+
+Description
+    Returns the version of the VMOD.
+Example
+    set req.x-version = lang.version();
